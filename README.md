@@ -39,9 +39,9 @@
 
 ## 触发方式 · How to trigger
 
-直接在 WorkBuddy 对话框中说出以下任何内容即可触发：
+直接在对话框中说出以下任何内容即可触发：
 
-*Say any of the following in WorkBuddy to trigger this Skill:*
+*Say any of the following to trigger this Skill:*
 
 ```
 平行人生 / 如果当时 / 另一种可能 / 如果我没有 / 如果选择了
