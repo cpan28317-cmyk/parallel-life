@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平行宇宙 — 你的另一种人生</title>
+<style>
+  /* ===== Reset & Base ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #0a0e27;
+    color: #e8e0ff;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ===== Stars ===== */
+  #stars-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--duration, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* ===== Entrance Overlay ===== */
+  #entrance-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #0a0e27;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 1000;
+    transition: opacity 1s ease;
+  }
+  #entrance-overlay h1 {
+    font-size: clamp(2rem, 6vw, 4rem);
+    background: linear-gradient(135deg, #f0c040, #4dc9f6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeInUp 1.5s ease forwards;
+    opacity: 0;
+  }
+  #entrance-overlay p {
+    margin-top: 1rem; color: #8888aa; font-size: 1rem;
+    animation: fadeInUp 1.5s ease 0.8s forwards; opacity: 0;
+  }
+  #skip-btn {
+    position: absolute; bottom: 2rem; right: 2rem;
+    background: transparent; border: 1px solid #8888aa;
+    color: #8888aa; padding: 0.5rem 1rem; border-radius: 20px;
+    cursor: pointer; font-size: 0.85rem; transition: all 0.3s;
+  }
+  #skip-btn:hover { border-color: #e8e0ff; color: #e8e0ff; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Main Content ===== */
+  #main-content { position: relative; z-index: 1; opacity: 0; transition: opacity 1s ease; }
+  #main-content.visible { opacity: 1; }
+
+  /* ===== Header ===== */
+  header {
+    text-align: center;
+    padding: 5rem 2rem 3rem;
+  }
+  header h1 {
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    background: linear-gradient(135deg, #f0c040 0%, #4dc9f6 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.2em;
+  }
+  .fork-badge {
+    display: inline-block;
+    margin-top: 1.5rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 30px;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    color: #8888aa;
+  }
+  .fork-badge strong { color: #e8e0ff; }
+
+  /* ===== Section Container ===== */
+  .section { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem; }
+
+  /* ===== Timeline ===== */
+  .timeline-section { padding: 4rem 2rem; }
+  .timeline-header {
+    text-align: center; margin-bottom: 3rem;
+  }
+  .timeline-header h2 { font-size: 1.8rem; color: #e8e0ff; }
+  .timeline-header p { color: #8888aa; margin-top: 0.5rem; }
+
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+  }
+  .timeline-grid::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 0; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-50%);
+  }
+
+  .track-label {
+    text-align: center;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  .track-you .track-label { background: rgba(240,192,64,0.15); color: #f0c040; border: 1px solid rgba(240,192,64,0.3); }
+  .track-parallel .track-label { background: rgba(77,201,246,0.15); color: #4dc9f6; border: 1px solid rgba(77,201,246,0.3); }
+
+  .track { display: flex; flex-direction: column; gap: 1.5rem; }
+  .track-you { text-align: right; }
+  .track-parallel { text-align: left; }
+
+  .timeline-node {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0; transform: translateY(20px);
+  }
+  .timeline-node.visible { opacity: 1; transform: translateY(0); }
+  .track-you .timeline-node:hover { border-color: rgba(240,192,64,0.5); background: rgba(240,192,64,0.08); }
+  .track-parallel .timeline-node:hover { border-color: rgba(77,201,246,0.5); background: rgba(77,201,246,0.08); }
+
+  .node-year {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+  .track-you .node-year { color: #f0c040; }
+  .track-parallel .node-year { color: #4dc9f6; }
+
+  .node-title { font-size: 1rem; color: #e8e0ff; font-weight: 500; }
+
+  .node-detail {
+    font-size: 0.88rem;
+    color: #8888aa;
+    margin-top: 0.8rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  .node-detail.expanded { max-height: 300px; }
+  .expand-hint {
+    font-size: 0.75rem; color: #555577; margin-top: 0.5rem;
+    transition: color 0.3s;
+  }
+  .timeline-node:hover .expand-hint { color: #8888aa; }
+
+  /* ===== Dialogue ===== */
+  .dialogue-section {
+    max-width: 760px; margin: 0 auto;
+    padding: 4rem 2rem;
+  }
+  .dialogue-section h2 {
+    text-align: center; font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .dialogue-section .subtitle {
+    text-align: center; color: #8888aa; margin-bottom: 3rem; font-size: 0.9rem;
+  }
+
+  .dialogue-exchange {
+    margin-bottom: 2rem;
+    opacity: 0; transform: translateY(15px);
+    transition: all 0.5s ease;
+  }
+  .dialogue-exchange.visible { opacity: 1; transform: translateY(0); }
+
+  .bubble {
+    display: inline-block;
+    max-width: 80%;
+    padding: 1rem 1.3rem;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    position: relative;
+  }
+  .bubble-user {
+    background: rgba(240,192,64,0.15);
+    border: 1px solid rgba(240,192,64,0.3);
+    color: #f5e0a0;
+    border-radius: 16px 4px 16px 16px;
+  }
+  .bubble-parallel {
+    background: rgba(77,201,246,0.12);
+    border: 1px solid rgba(77,201,246,0.3);
+    color: #b8e8ff;
+    border-radius: 4px 16px 16px 16px;
+  }
+
+  .message-user { text-align: right; }
+  .message-parallel { text-align: left; }
+
+  .speaker-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.08em;
+  }
+  .message-user .speaker-label { color: #f0c040; }
+  .message-parallel .speaker-label { color: #4dc9f6; }
+
+  /* ===== Landing Section ===== */
+  .landing-section {
+    background: linear-gradient(180deg, transparent, rgba(60,40,80,0.6), rgba(80,50,40,0.4));
+    padding: 6rem 2rem;
+    text-align: center;
+  }
+  .landing-inner { max-width: 700px; margin: 0 auto; }
+  .landing-section h2 { font-size: 1.6rem; margin-bottom: 2rem; color: #e8e0ff; }
+  .bridge-text {
+    font-size: 1.15rem;
+    color: #c8c0e0;
+    line-height: 2;
+    font-style: italic;
+    margin-bottom: 2rem;
+  }
+  .reflection-text {
+    font-size: 0.95rem;
+    color: #8888aa;
+    background: rgba(255,255,255,0.04);
+    border-left: 3px solid rgba(240,192,64,0.4);
+    padding: 1rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+    margin-top: 1.5rem;
+  }
+
+  /* ===== Footer ===== */
+  footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #555577;
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 768px) {
+    .timeline-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .timeline-grid::before { display: none; }
+    .track-you { text-align: left; }
+    .track-you .track-label { margin-bottom: 1rem; }
+    .track-parallel { margin-top: 3rem; }
+    .bubble { max-width: 92%; }
+  }
+
+  /* ===== Reduced Motion ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .star, #entrance-overlay h1, #entrance-overlay p,
+    .timeline-node, .dialogue-exchange {
+      animation: none !important;
+      transition: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div id="stars-container"></div>
+
+<!-- Entrance Overlay -->
+<div id="entrance-overlay">
+  <h1>平行宇宙</h1>
+  <p>另一个你，正在这里等候</p>
+  <button id="skip-btn">跳过 →</button>
+</div>
+
+<!-- Main Content -->
+<div id="main-content">
+
+  <!-- Header -->
+  <header>
+    <h1>平行宇宙</h1>
+    <div class="fork-badge">
+      <strong>[分叉点年份]</strong> &nbsp;·&nbsp; [分叉点描述，例：你去了北京 / 平行自我留在成都]
+    </div>
+  </header>
+
+  <!-- Timeline -->
+  <div class="timeline-section">
+    <div class="timeline-header">
+      <h2>两条轨迹</h2>
+      <p>点击节点，展开细节</p>
+    </div>
+
+    <div class="timeline-grid">
+      <!-- 你的轨迹 -->
+      <div class="track track-you">
+        <div style="text-align:center">
+          <span class="track-label">你的人生</span>
+        </div>
+
+        <!-- 节点：复制此块添加更多节点 -->
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份，如 2019]</div>
+          <div class="node-title">[事件标题]</div>
+          <div class="node-detail">[展开后的详细描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份]</div>
+          <div class="node-title">[事件标题]</div>
+          <div class="node-detail">[展开后的详细描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份]</div>
+          <div class="node-title">[事件标题]</div>
+          <div class="node-detail">[展开后的详细描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份，如 2026]</div>
+          <div class="node-title">[当前状态标题]</div>
+          <div class="node-detail">[当前状态描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+      </div>
+
+      <!-- 平行自我轨迹 -->
+      <div class="track track-parallel">
+        <div style="text-align:center">
+          <span class="track-label">平行自我的人生</span>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份]</div>
+          <div class="node-title">[事件标题]</div>
+          <div class="node-detail">[展开后的详细描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份]</div>
+          <div class="node-title">[事件标题]</div>
+          <div class="node-detail">[展开后的详细描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份]</div>
+          <div class="node-title">[事件标题]</div>
+          <div class="node-detail">[展开后的详细描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+
+        <div class="timeline-node" onclick="toggleDetail(this)">
+          <div class="node-year">[年份，如 2026]</div>
+          <div class="node-title">[当前状态标题]</div>
+          <div class="node-detail">[当前状态描述]</div>
+          <div class="expand-hint">点击展开 ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialogue -->
+  <div class="dialogue-section">
+    <h2>💬 对话精华</h2>
+    <p class="subtitle">两个你，曾经说过的话</p>
+
+    <!-- 对话组 1：复制此块添加更多 -->
+    <div class="dialogue-exchange">
+      <div class="message-user">
+        <div class="speaker-label">你</div>
+        <div class="bubble bubble-user">[用户的对话原文]</div>
+      </div>
+    </div>
+    <div class="dialogue-exchange">
+      <div class="message-parallel">
+        <div class="speaker-label">平行自我</div>
+        <div class="bubble bubble-parallel">[平行自我的回应原文]</div>
+      </div>
+    </div>
+
+    <!-- 对话组 2 -->
+    <div class="dialogue-exchange" style="margin-top:2.5rem">
+      <div class="message-user">
+        <div class="speaker-label">你</div>
+        <div class="bubble bubble-user">[用户的对话原文]</div>
+      </div>
+    </div>
+    <div class="dialogue-exchange">
+      <div class="message-parallel">
+        <div class="speaker-label">平行自我</div>
+        <div class="bubble bubble-parallel">[平行自我的回应原文]</div>
+      </div>
+    </div>
+
+    <!-- 对话组 3 -->
+    <div class="dialogue-exchange" style="margin-top:2.5rem">
+      <div class="message-user">
+        <div class="speaker-label">你</div>
+        <div class="bubble bubble-user">[用户的对话原文]</div>
+      </div>
+    </div>
+    <div class="dialogue-exchange">
+      <div class="message-parallel">
+        <div class="speaker-label">平行自我</div>
+        <div class="bubble bubble-parallel">[平行自我的回应原文]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Landing -->
+  <div class="landing-section">
+    <div class="landing-inner">
+      <h2>🌱 带回当下</h2>
+      <p class="bridge-text">[Phase 5 的桥接语句，例：那个平行世界里的你，和你一样努力、一样有遗憾、一样在认真地活着。而此刻，属于你的这一条路，正在继续。]</p>
+      <div class="reflection-text">
+        [用户在 Phase 5 的反思内容，如有。例："我觉得我带走了一种平静，知道无论哪条路都有代价，这反而让我更坦然了。"]
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>本网页由「平行人生」生成 &nbsp;·&nbsp; [YYYY-MM-DD]</p>
+  </footer>
+
+</div><!-- end #main-content -->
+
+<script>
+  // ===== Stars =====
+  const container = document.getElementById('stars-container');
+  for (let i = 0; i < 150; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    star.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      --duration: ${(Math.random() * 4 + 2).toFixed(1)}s;
+      --delay: ${(Math.random() * 4).toFixed(1)}s;
+    `;
+    container.appendChild(star);
+  }
+
+  // ===== Entrance Overlay =====
+  const overlay = document.getElementById('entrance-overlay');
+  const mainContent = document.getElementById('main-content');
+
+  function dismissOverlay() {
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      mainContent.classList.add('visible');
+    }, 1000);
+  }
+
+  setTimeout(dismissOverlay, 5500);
+  document.getElementById('skip-btn').addEventListener('click', dismissOverlay);
+
+  // ===== Timeline Node Toggle =====
+  function toggleDetail(node) {
+    const detail = node.querySelector('.node-detail');
+    const hint = node.querySelector('.expand-hint');
+    detail.classList.toggle('expanded');
+    hint.textContent = detail.classList.contains('expanded') ? '点击收起 ↑' : '点击展开 ↓';
+  }
+
+  // ===== Scroll Reveal =====
+  const revealTargets = document.querySelectorAll('.timeline-node, .dialogue-exchange');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealTargets.forEach(el => revealObserver.observe(el));
+</script>
+</body>
+</html>
